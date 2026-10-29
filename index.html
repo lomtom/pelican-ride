@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#102c35">
+  <meta name="description" content="戴上头盔，迎着海风。一个拥有物理围巾、昼夜循环与实时合成音效的 3D 鹈鹕骑行小游戏。">
+  <title>Pelican Coast — 鹈鹕海岸骑行</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23ffb703'/%3E%3Cpath d='M14 35c0-14 9-23 20-23 9 0 15 5 16 13l12 5-12 5c-3 11-12 17-23 14-9-2-13-7-13-14Z' fill='%23fff8e7'/%3E%3Ccircle cx='38' cy='22' r='3' fill='%23102c35'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}
+  </script>
+</head>
+<body>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="i-muted" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 5 6m0-6-5 6"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v13H4V7Z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 13v5m-4 3h8m-6-3h4"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.4 2.2c-.8.4-1.2.9-1.2 1.8m0 3.5v.1"/></symbol>
+    <symbol id="i-full" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-fish" viewBox="0 0 24 24"><path d="M3 12c4-6 10-6 15 0-5 6-11 6-15 0Z"/><path d="m4 12-3-4v8l3-4Z"/><circle cx="14.5" cy="10.5" r=".7"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h3a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5Z"/></symbol>
+  </svg>
+
+  <main id="app">
+    <div id="scene" aria-label="鹈鹕在海岸骑自行车的 3D 互动场景"></div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar hud">
+      <a class="brand" href="#" aria-label="Pelican Coast 首页">
+        <span class="brand-mark"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 27C8 16 15 9 25 9c7 0 11 4 12 10l9 4-9 4c-2 8-9 13-18 11C12 37 8 33 8 27Z" fill="currentColor"/><path d="m29 23 17 4-17 3Z" fill="#ff7b54"/><circle cx="29" cy="17" r="2.2" fill="#102c35"/></svg></span>
+        <span><strong>PELICAN</strong><small>COAST RIDE CLUB</small></span>
+      </a>
+      <div class="location-pill"><span class="live-dot"></span><span>南湾海岸线</span><i></i><span id="clock">06:40</span></div>
+      <nav class="top-actions" aria-label="游戏功能">
+        <button id="sound-btn" class="icon-btn" aria-label="开启或关闭声音" title="声音 M"><svg><use href="#i-muted"/></svg></button>
+        <button id="camera-btn" class="icon-btn" aria-label="切换镜头" title="镜头 C"><svg><use href="#i-camera"/></svg><span id="camera-number">01</span></button>
+        <button id="achievements-btn" class="icon-btn" aria-label="查看成就" title="成就"><svg><use href="#i-trophy"/></svg><span id="achievement-count">0</span></button>
+        <button id="help-btn" class="icon-btn" aria-label="查看操作帮助" title="帮助 H"><svg><use href="#i-help"/></svg></button>
+        <button id="fullscreen-btn" class="icon-btn desktop-only" aria-label="全屏" title="全屏"><svg><use href="#i-full"/></svg></button>
+      </nav>
+    </header>
+
+    <section class="ride-stats hud" aria-label="骑行数据">
+      <div class="eyebrow"><span id="ride-mode-dot"></span><span id="ride-mode">准备出发</span></div>
+      <div class="speed-readout"><span id="speed">00</span><div><b>KM/H</b><small>当前速度</small></div></div>
+      <div class="stat-row">
+        <div><svg><use href="#i-route"/></svg><span><b id="distance">0.00</b><small>骑行 KM</small></span></div>
+        <div><svg><use href="#i-fish"/></svg><span><b id="fish-count">0</b><small>捕获鲜鱼</small></span></div>
+      </div>
+      <div class="combo" id="combo"><span>连续捕获</span><b id="combo-count">× 2</b><div><i id="combo-bar"></i></div></div>
+    </section>
+
+    <aside class="camera-label hud"><span>CAM <b id="camera-index">01</b> / 05</span><strong id="camera-name">海岸追随</strong></aside>
+
+    <div class="autopilot-notice hud" id="autopilot-notice"><span class="auto-icon">A</span><div><b>海风自动驾驶</b><small>操作任意按键即可接管</small></div></div>
+
+    <section class="bottom-hud hud">
+      <div class="day-cycle"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="5"/><path d="M14 2v3m0 18v3M2 14h3m18 0h3M5.5 5.5l2 2m13 13 2 2m0-17-2 2m-13 13-2 2"/></svg><div><span><b id="period-label">晨光骑行</b><small>昼夜自动循环</small></span><div class="cycle-track"><i id="cycle-progress"></i><span id="cycle-marker"></span></div></div></div>
+      <div class="key-guide desktop-only"><span><kbd>W</kbd><kbd>S</kbd> 加减速</span><span><kbd>A</kbd><kbd>D</kbd> 变道</span><span><kbd>SPACE</kbd> 跳跃</span><span><kbd>SHIFT</kbd> 抬前轮</span></div>
+      <button id="quality-btn" class="quality-pill" aria-label="画质自适应状态"><span class="quality-bars"><i></i><i></i><i></i></span><span><b id="quality-label">AUTO · 高画质</b><small id="fps-label">60 FPS</small></span></button>
+    </section>
+
+    <section class="touch-controls" aria-label="触屏骑行控制">
+      <div class="touch-left"><button class="touch-btn" data-action="left" aria-label="向左变道"><svg><use href="#i-chevron"/></svg></button><button class="touch-btn" data-action="right" aria-label="向右变道"><svg><use href="#i-chevron"/></svg></button></div>
+      <div class="touch-right"><button class="touch-btn touch-small" data-action="brake" aria-label="刹车">刹</button><button class="touch-btn touch-small" data-action="wheelie" aria-label="抬起前轮">翘</button><button class="touch-btn touch-jump" data-action="jump" aria-label="跳跃">跃</button><button class="touch-btn touch-pedal" data-action="accelerate" aria-label="加速">骑</button></div>
+    </section>
+
+    <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+    <div class="catch-label" id="catch-label">鲜鱼 +1</div>
+
+    <section id="intro" class="intro-overlay">
+      <div class="intro-card">
+        <div class="intro-kicker"><span></span>INTERACTIVE COASTAL EXPERIENCE</div>
+        <h1>一只鹈鹕，<br><em>一整片海岸。</em></h1>
+        <p>戴好头盔与墨镜，让红围巾随风扬起。<br>穿过昼夜与浪花，开启今天最自由的骑行。</p>
+        <button id="start-btn" class="primary-btn"><span>开始骑行</span><svg><use href="#i-chevron"/></svg></button>
+        <div class="intro-meta"><span>3D 实时渲染</span><i></i><span>建议开启声音</span><i></i><span>支持触屏</span></div>
+      </div>
+      <div class="intro-side"><span>36° 42′ N</span><i></i><span>COASTLINE 01</span></div>
+    </section>
+
+    <section id="loading" class="loading-overlay">
+      <div class="loader-logo">P</div><strong>正在唤醒海岸</strong><span id="loading-text">连接 3D 引擎…</span><div class="loader-track"><i></i></div>
+    </section>
+
+    <div id="drawer-backdrop" class="drawer-backdrop"></div>
+    <aside id="achievements-drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="achievements-title">
+      <div class="drawer-head"><div><span class="eyebrow">RIDE MILESTONES</span><h2 id="achievements-title">海岸成就</h2></div><button class="icon-btn close-drawer" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div>
+      <div class="achievement-summary"><div class="achievement-ring"><span id="achievement-ring-count">0</span><small>/ 14</small></div><div><b id="achievement-title">初次见面，追风者</b><p>每一次骑行，都值得被记住。</p><div class="summary-track"><i id="achievement-progress"></i></div></div></div>
+      <div id="achievement-list" class="achievement-list"></div>
+    </aside>
+
+    <aside id="help-drawer" class="drawer help-drawer" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="drawer-head"><div><span class="eyebrow">RIDER'S HANDBOOK</span><h2 id="help-title">骑行手册</h2></div><button class="icon-btn close-drawer" aria-label="关闭"><svg><use href="#i-close"/></svg></button></div>
+      <div class="help-hero"><span>01</span><div><b>迎着风，很简单</b><p>骑行会自动前进，你只需掌握节奏。</p></div></div>
+      <div class="help-list">
+        <div><span><kbd>W</kbd> / <kbd>↑</kbd></span><b>加速踩踏</b><small>触屏按住「骑」</small></div>
+        <div><span><kbd>S</kbd> / <kbd>↓</kbd></span><b>刹车减速</b><small>触屏按住「刹」</small></div>
+        <div><span><kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd></span><b>左右变道</b><small>触屏点击方向键</small></div>
+        <div><span><kbd>SPACE</kbd></span><b>跳跃</b><small>越过障碍，接住高处的鱼</small></div>
+        <div><span><kbd>SHIFT</kbd></span><b>抬起前轮</b><small>速度足够时保持特技</small></div>
+        <div><span><kbd>C</kbd></span><b>切换镜头</b><small>五种视角轮换</small></div>
+      </div>
+      <div class="help-tip"><b>偷个懒也没关系</b><p>闲置 6 秒后，鹈鹕会自动巡航、变道和跳跃。任意操作即可重新接管。</p></div>
+    </aside>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
